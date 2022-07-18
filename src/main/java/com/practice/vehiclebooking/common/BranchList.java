@@ -9,6 +9,7 @@ import java.util.Map;
 @Data
 public class BranchList {
 
+    // This is a Map with Branch Name as key and Branch class as Value
     private Map<String, Branch> branchMap;
 
     private static BranchList branchList = null;

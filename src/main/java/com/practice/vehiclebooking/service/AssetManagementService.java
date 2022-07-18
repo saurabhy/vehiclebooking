@@ -1,7 +1,5 @@
 package com.practice.vehiclebooking.service;
 
-
-
 import com.practice.vehiclebooking.common.BranchList;
 import com.practice.vehiclebooking.common.Constants;
 import com.practice.vehiclebooking.custom.StrategyProcessor;
@@ -29,6 +27,7 @@ public class AssetManagementService {
     public boolean addBranch(String branchId, String[] types){
         Map<String, Branch> branchMap = BranchList.getInstance().getBranchMap();
 
+        // Check if already branch is registered.
         if(!branchMap.containsKey(branchId)){
             branchMap.put(branchId,new Branch(branchId));
         }
@@ -38,6 +37,7 @@ public class AssetManagementService {
 
         for(String type : types){
             try{
+                // Check if the vehicle type input is one of the available vehicle types.
                 EnumUtils.findEnumInsensitiveCase(VehicleType.class,type);
                 branchMap.get(branchId).getAvailableTypes().add(VehicleType.valueOf(type));
             }
@@ -58,6 +58,7 @@ public class AssetManagementService {
 
         String vehicleHash = vehicleType+"_"+vehicleId;
 
+        // Fast check for whether that vehicle is already present or not
         if(branch.getVehicleHash().contains(vehicleHash)){
             return false;
         }
@@ -70,6 +71,8 @@ public class AssetManagementService {
                 break;
             }
         }
+
+        // If this vehicle type is not available in the branch.
         if(!typeFound){
             return false;
         }
@@ -78,6 +81,7 @@ public class AssetManagementService {
             branch.getInventoryList().put(vehicleType.toUpperCase(),new ArrayList<>());
         }
 
+        // Set the slot mask to 0.
         Vehicle curVehicle = new Vehicle(VehicleType.valueOf(vehicleType.toUpperCase()),price,vehicleId,0l);
 
         branch.getInventoryList().get(vehicleType.toUpperCase()).add(curVehicle);
@@ -109,8 +113,8 @@ public class AssetManagementService {
             }
         }
 
+        // Sorts the available vehicle according to the vehicle allocation strategy.
         strategyProcessor.createOrdering(availableVehicles, Constants.MIN_PRICE_ALLOCATION_STRATEGY);
-
 
         return availableVehicles;
 
@@ -144,6 +148,7 @@ public class AssetManagementService {
         // total size of available Vehicles according to slot
         int availableTotal = availableVehicles.size();
 
+        // to check for dynamic pricing
         boolean toIncreasePrice = (availableTotal<0.2*total)?true:false;
 
         if(availableVehicles.size()==0)
@@ -156,7 +161,7 @@ public class AssetManagementService {
         bookedVehicle.setSlots(bookedVehicle.getSlots()|reqSlot);
 
         if(toIncreasePrice){
-            return (endHr-startHr)*bookedVehicle.getPricePerHr()*1.1;
+            return (endHr-startHr)*bookedVehicle.getPricePerHr()*Constants.SURGE_PRICE_MULTIPLIER;
         }
 
         return (endHr-startHr)*bookedVehicle.getPricePerHr();
